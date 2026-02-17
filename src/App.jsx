@@ -3,46 +3,59 @@ import Scanner from "./components/Scanner";
 import AdminPanel from "./pages/AdminPanel";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Welcome from "./pages/Welcome";
 import "./index.css";
 
 function App() {
   const [role, setRole] = useState(null);
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState("welcome");
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const savedRole = localStorage.getItem("role");
-    if (savedRole) setRole(savedRole);
+    if (savedRole) {
+      setRole(savedRole);
+      setPage("dashboard");
+    }
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("role");
     localStorage.removeItem("currentUser");
     setRole(null);
+    setPage("welcome");
   };
 
   if (!role) {
-    return page === "login" ? (
-      <Login onLogin={setRole} goToRegister={() => setPage("register")} />
-    ) : (
-      <Register goToLogin={() => setPage("login")} />
-    );
+    if (page === "welcome")
+      return (
+        <Welcome
+          goToLogin={() => setPage("login")}
+          goToRegister={() => setPage("register")}
+        />
+      );
+
+    if (page === "login")
+      return (
+        <Login
+          onLogin={(r) => {
+            setRole(r);
+            setPage("dashboard");
+          }}
+          goToRegister={() => setPage("register")}
+        />
+      );
+
+    if (page === "register")
+      return <Register goToLogin={() => setPage("login")} />;
   }
 
   return (
     <div className="layout">
-
-      <div className={`sidebar ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>
-        <div className="sidebar-header">
-          <h2>CyberShield</h2>
-          <button onClick={() => setCollapsed(!collapsed)} className="collapse-btn">
-            ☰
-          </button>
-        </div>
+      <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+        <h2>CYBERSHIELD</h2>
 
         <button onClick={() => setPage("dashboard")}>Dashboard</button>
-
         {role === "admin" && (
           <button onClick={() => setPage("admin")}>Admin Panel</button>
         )}
@@ -53,16 +66,8 @@ function App() {
       </div>
 
       <div className="main-content">
-        <div className="topbar">
-          <button className="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)}>
-            ☰
-          </button>
-        </div>
-
-        <div className="page-transition">
-          {page === "dashboard" && <Scanner />}
-          {page === "admin" && role === "admin" && <AdminPanel />}
-        </div>
+        {page === "dashboard" && <Scanner />}
+        {page === "admin" && <AdminPanel />}
       </div>
     </div>
   );

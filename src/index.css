@@ -270,3 +270,54 @@ button:hover {
 .link:hover {
   text-shadow: 0 0 10px #00ff88;
 }
+/* WELCOME PAGE */
+
+.welcome-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.welcome-card {
+  text-align: center;
+  padding: 60px;
+  border: 1px solid #00ff88;
+  border-radius: 20px;
+  box-shadow: 0 0 40px #00ff88;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.welcome-title {
+  font-size: 36px;
+  margin-bottom: 20px;
+  text-shadow: 0 0 20px #00ff88;
+}
+
+.welcome-subtitle {
+  margin-bottom: 40px;
+  font-size: 14px;
+  color: #00ff88;
+}
+
+.welcome-buttons button {
+  margin: 10px;
+  padding: 12px 25px;
+  border: 1px solid #00ff88;
+  background: transparent;
+  color: #00ff88;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.welcome-buttons button:hover {
+  background: #00ff88;
+  color: black;
+  box-shadow: 0 0 20px #00ff88;
+}
+
+.secondary-btn {
+  border-color: #00cc66;
+}
