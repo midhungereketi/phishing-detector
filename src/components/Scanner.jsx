@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { analyzeURL } from "../utils/urlAnalyzer";
+import { Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
   Legend,
 } from "chart.js";
-import { Pie } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -14,20 +14,11 @@ function Scanner() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState([]);
-  const [notification, setNotification] = useState("");
 
   useEffect(() => {
-    const saved =
-      JSON.parse(localStorage.getItem("scanHistory")) || [];
+    const saved = JSON.parse(localStorage.getItem("scanHistory")) || [];
     setHistory(saved);
   }, []);
-
-  const playSound = () => {
-    const audio = new Audio(
-      "https://www.soundjay.com/buttons/sounds/button-09.mp3"
-    );
-    audio.play();
-  };
 
   const handleScan = () => {
     if (!url) return alert("Enter URL");
@@ -48,14 +39,9 @@ function Scanner() {
       setHistory(updated);
       localStorage.setItem("scanHistory", JSON.stringify(updated));
 
-      playSound();
-      setNotification(`Scan Completed: ${analysis.riskLevel} Risk`);
-
-      setTimeout(() => setNotification(""), 3000);
-
       setLoading(false);
       setUrl("");
-    }, 1500);
+    }, 1200);
   };
 
   const low = history.filter(h => h.riskLevel === "Low").length;
@@ -75,12 +61,6 @@ function Scanner() {
   return (
     <div>
 
-      {notification && (
-        <div className="notification">
-          {notification}
-        </div>
-      )}
-
       <div className="summary-grid">
         <div className="summary-card"><h3>Total</h3><p>{history.length}</p></div>
         <div className="summary-card green"><h3>Low</h3><p>{low}</p></div>
@@ -90,13 +70,15 @@ function Scanner() {
 
       <div className="card">
         <h2>URL Scanner</h2>
-        <input
-          type="text"
-          placeholder="Enter URL..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <button onClick={handleScan}>Scan</button>
+        <div className="scan-row">
+          <input
+            type="text"
+            placeholder="Enter suspicious URL..."
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+          />
+          <button onClick={handleScan}>Scan</button>
+        </div>
 
         {loading && <div className="spinner"></div>}
       </div>
@@ -109,6 +91,7 @@ function Scanner() {
           </div>
         </div>
       )}
+
     </div>
   );
 }
