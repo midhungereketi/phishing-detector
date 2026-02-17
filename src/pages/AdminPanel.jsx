@@ -10,27 +10,35 @@ function AdminPanel() {
   }, []);
 
   return (
-    <div style={{ marginTop: "40px", padding: "20px", background: "#111827", borderRadius: "10px" }}>
-      <h2>Admin Activity Logs</h2>
+    <div className="card" style={{ marginTop: "20px" }}>
+      <h2>Activity Logs</h2>
 
-      <table style={{ width: "100%", marginTop: "15px" }}>
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Action</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((log, index) => (
-            <tr key={index}>
-              <td>{log.username}</td>
-              <td>{log.action}</td>
-              <td>{log.time}</td>
+      <div className="table-responsive">
+        <table className="modern-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Action Details</th>
+              <th>Timestamp</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {logs.length > 0 ? (
+              logs.map((log, index) => (
+                <tr key={index}>
+                  <td style={{ fontWeight: '500', color: '#8b5cf6' }}>{log.username}</td>
+                  <td>{log.action}</td>
+                  <td style={{ color: '#64748b' }}>{log.time}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>No logs recorded</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

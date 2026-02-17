@@ -38,11 +38,12 @@ function Register({ goToLogin }) {
 
   return (
     <div className="auth-container">
-      <h2>🛡 Register</h2>
+      <h2>New Access ID</h2>
+      <p style={{ marginBottom: '30px', color: '#94a3b8' }}>Create your credentials</p>
 
       <input
         type="text"
-        placeholder="Username"
+        placeholder="Choose Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
@@ -50,23 +51,24 @@ function Register({ goToLogin }) {
       <div className="password-wrapper">
         <input
           type={showPassword ? "text" : "password"}
-          placeholder="Password"
+          placeholder="Set Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <span
           className="eye-icon"
           onClick={() => setShowPassword(!showPassword)}
+          style={{ cursor: 'pointer', position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)' }}
         >
           {showPassword ? "🙈" : "👁"}
         </span>
       </div>
 
-      <button onClick={handleRegister}>Register</button>
+      <button className="primary-btn w-full" onClick={handleRegister}>Generate ID</button>
 
-      <p>
-        Already have an account?{" "}
-        <span className="link" onClick={goToLogin}>
+      <p className="mt-4" style={{ fontSize: '0.9rem', color: '#64748b' }}>
+        Already authorized?{" "}
+        <span className="link" onClick={goToLogin} style={{ color: '#06b6d4', cursor: 'pointer' }}>
           Login
         </span>
       </p>

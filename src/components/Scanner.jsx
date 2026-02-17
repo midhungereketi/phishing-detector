@@ -16,8 +16,17 @@ function Scanner() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("scanHistory")) || [];
-    setHistory(saved);
+    try {
+      const saved = JSON.parse(localStorage.getItem("scanHistory")) || [];
+      if (Array.isArray(saved)) {
+        setHistory(saved);
+      } else {
+        setHistory([]);
+      }
+    } catch (e) {
+      console.error("Failed to parse history", e);
+      setHistory([]);
+    }
   }, []);
 
   const handleScan = () => {
@@ -48,12 +57,19 @@ function Scanner() {
   const medium = history.filter(h => h.riskLevel === "Medium").length;
   const high = history.filter(h => h.riskLevel === "High").length;
 
+  // Calculate Risk Score (0-100) based on High/Medium threats found
+  const totalScans = history.length;
+  const riskScore = totalScans === 0 ? 0 : Math.round(((high * 10) + (medium * 5)) / totalScans * 10);
+  const normalizedRisk = Math.min(riskScore, 100);
+
   const chartData = {
     labels: ["Low", "Medium", "High"],
     datasets: [
       {
         data: [low, medium, high],
-        backgroundColor: ["#22c55e", "#f59e0b", "#ef4444"],
+        backgroundColor: ["#10b981", "#f59e0b", "#ef4444"],
+        borderColor: "rgba(255,255,255,0.1)",
+        borderWidth: 2,
       },
     ],
   };
@@ -61,11 +77,11 @@ function Scanner() {
   return (
     <div>
 
-      <div className="summary-grid">
-        <div className="summary-card"><h3>Total</h3><p>{history.length}</p></div>
-        <div className="summary-card green"><h3>Low</h3><p>{low}</p></div>
-        <div className="summary-card yellow"><h3>Medium</h3><p>{medium}</p></div>
-        <div className="summary-card red"><h3>High</h3><p>{high}</p></div>
+      <div className="chart-stats-grid">
+        <div className="stat-card"><h3>{history.length}</h3><p>Total Scans</p></div>
+        <div className="stat-card safe"><h3>{low}</h3><p>Low Risk</p></div>
+        <div className="stat-card warning"><h3>{medium}</h3><p>Medium Risk</p></div>
+        <div className="stat-card danger"><h3>{high}</h3><p>High Risk</p></div>
       </div>
 
       <div className="card">
@@ -73,11 +89,12 @@ function Scanner() {
         <div className="scan-row">
           <input
             type="text"
+            className={loading ? "animate-pulse" : ""}
             placeholder="Enter suspicious URL..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
-          <button onClick={handleScan}>Scan</button>
+          <button className="primary-btn" onClick={handleScan}>Scan Target</button>
         </div>
 
         {loading && <div className="spinner"></div>}
@@ -86,9 +103,20 @@ function Scanner() {
       {history.length > 0 && (
         <div className="card">
           <h2>Risk Analytics</h2>
-          <div className="chart-wrapper">
-            <Pie data={chartData} />
+
+          <div className="flex-center" style={{ gap: '3rem', flexWrap: 'wrap' }}>
+            <div className="chart-wrapper small" style={{ width: '240px' }}>
+              <Pie data={chartData} />
+            </div>
+
+            <div className={`risk-card-container ${normalizedRisk > 50 ? 'animate-pulse' : ''}`} style={{ padding: '2rem', borderRadius: '12px', minWidth: '220px' }}>
+              <div className="risk-score brand-glitch" style={{ fontSize: '3.5rem', fontWeight: 'bold', color: normalizedRisk > 70 ? '#ef4444' : '#10b981' }}>
+                {normalizedRisk}%
+              </div>
+              <div className="risk-label" style={{ color: '#94a3b8', letterSpacing: '2px', textTransform: 'uppercase' }}>Current Risk</div>
+            </div>
           </div>
+
         </div>
       )}
 

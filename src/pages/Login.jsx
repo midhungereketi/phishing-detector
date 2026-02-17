@@ -39,7 +39,8 @@ function Login({ onLogin, goToRegister }) {
 
   return (
     <div className="auth-container">
-      <h2>🔐 Secure Login</h2>
+      <h2>Please Login</h2>
+      <p style={{ marginBottom: '30px', color: '#94a3b8' }}>Identify yourself to access CyberOps</p>
 
       <input
         type="text"
@@ -58,17 +59,18 @@ function Login({ onLogin, goToRegister }) {
         <span
           className="eye-icon"
           onClick={() => setShowPassword(!showPassword)}
+          style={{ cursor: 'pointer', position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)' }}
         >
           {showPassword ? "🙈" : "👁"}
         </span>
       </div>
 
-      <button onClick={handleLogin}>Login</button>
+      <button className="primary-btn w-full" onClick={handleLogin}>Establish Connection</button>
 
-      <p>
-        New user?{" "}
-        <span className="link" onClick={goToRegister}>
-          Register here
+      <p className="mt-4" style={{ fontSize: '0.9rem', color: '#64748b' }}>
+        New personnel?{" "}
+        <span className="link" onClick={goToRegister} style={{ color: '#06b6d4', cursor: 'pointer' }}>
+          Register Access
         </span>
       </p>
     </div>
