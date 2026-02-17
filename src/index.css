@@ -188,3 +188,46 @@ button:hover {
   height: 300px;
   margin: auto;
 }
+.auth-container {
+  max-width: 400px;
+  margin: 100px auto;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 30px;
+  border: 1px solid #00ff88;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #00ff88;
+  text-align: center;
+}
+
+.password-wrapper {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #00ff88;
+}
+
+.eye-icon:hover {
+  text-shadow: 0 0 10px #00ff88;
+}
+
+.link {
+  color: #00ff88;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-shadow: 0 0 10px #00ff88;
+}

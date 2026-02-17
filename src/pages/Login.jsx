@@ -4,21 +4,7 @@ import bcrypt from "bcryptjs";
 function Login({ onLogin, goToRegister }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-
-  const logActivity = (user, action) => {
-    const logs = JSON.parse(localStorage.getItem("activityLogs")) || [];
-
-    const newLog = {
-      username: user,
-      action,
-      time: new Date().toLocaleString(),
-    };
-
-    localStorage.setItem(
-      "activityLogs",
-      JSON.stringify([newLog, ...logs])
-    );
-  };
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     const users = JSON.parse(localStorage.getItem("users")) || [];
@@ -26,7 +12,6 @@ function Login({ onLogin, goToRegister }) {
     if (username === "admin" && password === "1234") {
       localStorage.setItem("role", "admin");
       localStorage.setItem("currentUser", "admin");
-      logActivity("admin", "Logged In");
       onLogin("admin");
       return;
     }
@@ -46,7 +31,6 @@ function Login({ onLogin, goToRegister }) {
     if (passwordMatch) {
       localStorage.setItem("role", "user");
       localStorage.setItem("currentUser", username);
-      logActivity(username, "Logged In");
       onLogin("user");
     } else {
       alert("Invalid credentials!");
@@ -54,8 +38,8 @@ function Login({ onLogin, goToRegister }) {
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>Cyber Security Login</h2>
+    <div className="auth-container">
+      <h2>🔐 Secure Login</h2>
 
       <input
         type="text"
@@ -63,24 +47,27 @@ function Login({ onLogin, goToRegister }) {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
-      <br /><br />
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+      <div className="password-wrapper">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <span
+          className="eye-icon"
+          onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? "🙈" : "👁"}
+        </span>
+      </div>
 
       <button onClick={handleLogin}>Login</button>
 
-      <p style={{ marginTop: "20px" }}>
+      <p>
         New user?{" "}
-        <span
-          onClick={goToRegister}
-          style={{ color: "#00ffcc", cursor: "pointer" }}
-        >
+        <span className="link" onClick={goToRegister}>
           Register here
         </span>
       </p>

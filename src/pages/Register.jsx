@@ -4,10 +4,11 @@ import bcrypt from "bcryptjs";
 function Register({ goToLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleRegister = async () => {
     if (!username || !password) {
-      alert("Please fill all fields");
+      alert("Fill all fields");
       return;
     }
 
@@ -15,50 +16,58 @@ function Register({ goToLogin }) {
 
     const userExists = users.find((u) => u.username === username);
     if (userExists) {
-      alert("Username already exists!");
+      alert("User already exists!");
       return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = { username, password: hashedPassword };
+    const newUser = {
+      username,
+      password: hashedPassword,
+    };
 
-    const updatedUsers = [...users, newUser];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    localStorage.setItem(
+      "users",
+      JSON.stringify([...users, newUser])
+    );
 
-    alert("Registration successful!");
+    alert("Registered successfully!");
     goToLogin();
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h2>User Registration</h2>
+    <div className="auth-container">
+      <h2>🛡 Register</h2>
 
       <input
         type="text"
-        placeholder="Choose Username"
+        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
-      <br /><br />
 
-      <input
-        type="password"
-        placeholder="Choose Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <br /><br />
+      <div className="password-wrapper">
+        <input
+          type={showPassword ? "text" : "password"}
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <span
+          className="eye-icon"
+          onClick={() => setShowPassword(!showPassword)}
+        >
+          {showPassword ? "🙈" : "👁"}
+        </span>
+      </div>
 
       <button onClick={handleRegister}>Register</button>
 
-      <p style={{ marginTop: "20px" }}>
-        Already have account?{" "}
-        <span
-          onClick={goToLogin}
-          style={{ color: "#00ffcc", cursor: "pointer" }}
-        >
-          Login here
+      <p>
+        Already have an account?{" "}
+        <span className="link" onClick={goToLogin}>
+          Login
         </span>
       </p>
     </div>
