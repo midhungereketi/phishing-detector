@@ -28,7 +28,8 @@ const path = require('node:path');
     await page.getByText('ML engine ready').waitFor();
     await settle();
     await page.screenshot({ path: path.join(output, 'dashboard-empty.png'), fullPage: true });
-    passed.push('Login and empty dashboard render with custom orbital artwork');
+    assert.equal(await page.evaluate(() => [...document.querySelectorAll('*')].some(el => getComputedStyle(el).filter.includes('blur(') || getComputedStyle(el).backdropFilter.includes('blur('))), false, 'Workspace must not blur its content');
+    passed.push('Login and empty dashboard render with crisp vector detection pipeline; no blur filters');
     // Delay delivery of one real response to verify the processing state visually.
     await page.route('**/api/scan/url', async route => {
       const response = await route.fetch();
@@ -82,6 +83,16 @@ const path = require('node:path');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     assert.equal(await page.evaluate(() => document.getAnimations().filter(a => a.playState === 'running').length), 0);
     passed.push('Operating-system reduced-motion preference disables animation');
+    for (const name of ['Protection', 'Learn', 'Settings', 'Scan reports', 'Model lab']) {
+      await page.setViewportSize({ width: 1440, height: 1000 });
+      await page.getByRole('button', { name, exact: true }).click();
+      await page.screenshot({ path: path.join(output, `${name.toLowerCase().replaceAll(' ', '-')}-desktop.png`), fullPage: true });
+      for (const width of [320, 390, 768]) {
+        await page.setViewportSize({ width, height: 920 });
+        assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${name} overflows at ${width}px`);
+      }
+    }
+    passed.push('Protection, Learn, Settings, reports and Model Lab fit desktop and mobile widths');
     const anonymous = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' });
     const login = await anonymous.newPage();
     await login.goto('http://127.0.0.1:8000/');

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { send } from '../api';
-import { Icon, SecurityOrb } from './CyberVisuals';
+import { Icon, SecurityPipeline } from './CyberVisuals';
 
 export default function Auth({ onLogin }) {
   const [register, setRegister] = useState(false);
@@ -20,12 +20,12 @@ export default function Auth({ onLogin }) {
     <section className="auth-intro">
       <div className="brand"><span className="brand-symbol"><Icon name="shield" size={22} /></span> PhishGuard<span className="brand-tag">ML</span></div>
       <div className="eyebrow">COMPUTER NETWORKS / SECURITY PROJECT</div>
-      <h1>Think before<br />you <span>click.</span><span className="title-cursor" aria-hidden="true">_</span></h1>
+      <h1>Clarity before<br />every <span>click.</span></h1>
       <p className="lead">Phishing Attack Detection and Prevention Using Machine Learning</p>
       <p>Inspect suspicious URLs and emails. Understand the warning signs. Keep sensitive information out of the wrong hands.</p>
       <div className="intro-features"><span>01 / URL intelligence</span><span>02 / Email analysis</span><span>03 / Security reports</span></div>
-      <SecurityOrb compact />
-      <div className="scope-note">Local research application · trained models · no submitted websites visited</div>
+      <SecurityPipeline compact />
+      <div className="scope-note">Local inference by default. External checks only when you enable them.</div>
     </section>
     <section className="auth-card">
       <div className="auth-card-symbol"><Icon name="shield" size={27} /></div><div className="eyebrow">YOUR SECURITY WORKSPACE</div>

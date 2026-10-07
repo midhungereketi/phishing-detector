@@ -12,7 +12,7 @@ A local Computer Networks project built with React, Vite, FastAPI, scikit-learn 
 - Personal blocklist, optional automatic high risk host blocking and server-checked link-opening controls.
 - Persistent protection preferences, secure password hashing, expiring HttpOnly sessions and server-authorized admin activity logs.
 - Model Lab with actual metrics, confusion matrices, URL algorithm comparison, feature importance and dataset checksums.
-- Responsive cyber-themed interface with animated shield artwork, scan feedback, risk charts and educational explanations. Ctrl+K opens page navigation; the top-bar motion control pauses animations, and device reduced-motion preferences are respected.
+- Responsive navy-and-white security console with solid panels, crisp vector pipeline artwork, scan feedback, risk charts and educational explanations. A single stylesheet defines the interface; no blur filters or translucent content panels are used. Ctrl+K opens page navigation; the top-bar motion control pauses animations, and device reduced-motion preferences are respected.
 - Cached verified-online PhishTank URL matching; explicit fresh/stale/missing status and transparent risk-policy floors.
 - Opt-in public DNS, verified TLS, bounded HEAD redirects and RDAP domain registration age; optional read-only VirusTotal reputation lookup.
 - Original-byte `.eml` uploads, URL model sensitivity explanations and enriched PDF/JSON reports.

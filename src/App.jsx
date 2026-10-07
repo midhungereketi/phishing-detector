@@ -8,7 +8,7 @@ import Protection from './pages/Protection';
 import Academy from './pages/Academy';
 import Settings from './pages/Settings';
 import AdminPanel from './pages/AdminPanel';
-import { AmbientField, Icon } from './components/CyberVisuals';
+import { Icon } from './components/CyberVisuals';
 import CommandPalette from './components/CommandPalette';
 import { useMediaQuery } from './hooks';
 
@@ -48,18 +48,17 @@ export default function App() {
     catch (err) { setError(err.message); }
   }
   if (checking) return <div className="boot-screen"><div className="boot-emblem"><Icon name="shield" size={32} /></div><span>Connecting to PhishGuard…</span></div>;
-  if (!user) return <><AmbientField paused={!motion} /><Auth onLogin={setUser} />{error && <div className="connection-banner" role="alert">{error}</div>}</>;
+  if (!user) return <><Auth onLogin={setUser} />{error && <div className="connection-banner" role="alert">{error}</div>}</>;
   const items = user.role === 'admin' ? [...navigation, ['admin', 'activity', 'Activity logs']] : navigation;
   function navigate(target) { setPage(target); setMenu(false); setCommand(false); }
   return <div className="layout">
     <a className="skip-link" href="#main-content">Skip to content</a>
-    <AmbientField paused={!motion} />
     {menu && <button className="sidebar-scrim" aria-label="Close navigation" onClick={() => setMenu(false)} />}
     <aside className={`sidebar ${menu ? 'open' : ''}`} id="workspace-navigation" inert={mobile && !menu} onKeyDown={event => { if (event.key === 'Escape') setMenu(false); }}>
       <div className="brand"><span className="brand-symbol"><Icon name="shield" size={22} /></span> PhishGuard<span className="brand-tag">ML</span></div>
       <p className="nav-heading">SECURITY WORKSPACE</p>
       <nav aria-label="Main navigation">{items.map(([target, icon, label]) => <button key={target} className={`nav-item ${page === target ? 'active' : ''}`} aria-current={page === target ? 'page' : undefined} onClick={() => navigate(target)}><Icon name={icon} />{label}{page === target && <i className="nav-active-dot" />}</button>)}</nav>
-      <div className="sidebar-intel"><div className="sidebar-intel-icon"><Icon name="shield" size={22} /><span /></div><strong>Your instinct. Upgraded.</strong><p>A closer look at every suspicious link and message.</p><span className="intel-footnote">LOCAL WORKSPACE / V2.0</span></div>
+      <div className="sidebar-intel"><div className="sidebar-intel-icon"><Icon name="shield" size={22} /><span /></div><strong>Built for a closer look.</strong><p>Understand the evidence before you take the next step.</p><span className="intel-footnote">LOCAL ML · PRIVATE HISTORY</span></div>
       <div className="sidebar-bottom"><div className="user-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{user.role === 'admin' ? 'Administrator' : 'Personal workspace'}</span></div><button onClick={logout} className="icon-btn" aria-label="Sign out" title="Sign out"><Icon name="logout" size={17} /></button></div>
     </aside>
     <main className="main-content" id="main-content" tabIndex={-1}>

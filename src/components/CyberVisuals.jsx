@@ -24,85 +24,18 @@ export function Icon({ name = 'shield', size = 20, ...props }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name] || paths.shield}</svg>;
 }
 
-export function AmbientField({ paused = false }) {
-  const canvas = useRef(null);
-  useEffect(() => {
-    const element = canvas.current;
-    const context = element.getContext('2d');
-    if (!context) return;
-    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0;
-    let previous = 0;
-    let width = 0;
-    let height = 0;
-    let active = !document.hidden;
-    const particles = Array.from({ length: 35 }, (_, index) => ({
-      x: ((index * 137.508) % 1000) / 1000,
-      y: ((index * 293.771 + 170) % 1000) / 1000,
-      velocity: .000006 + (index % 4) * .000002,
-    }));
-    function resize() {
-      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
-      width = window.innerWidth; height = window.innerHeight;
-      element.width = width * ratio; element.height = height * ratio;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      draw(0);
-    }
-    function draw(delta) {
-      context.clearRect(0, 0, width, height);
-      for (const particle of particles) {
-        if (!paused && !preference.matches) particle.y = (particle.y - particle.velocity * delta + 1) % 1;
-        context.beginPath();
-        context.arc(particle.x * width, particle.y * height, 1, 0, Math.PI * 2);
-        context.fillStyle = 'rgba(172, 139, 255, 0.35)'; context.fill();
-      }
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const a = particles[i], b = particles[j];
-          const distance = Math.hypot((a.x - b.x) * width, (a.y - b.y) * height);
-          if (distance < 150) {
-            context.beginPath(); context.moveTo(a.x * width, a.y * height); context.lineTo(b.x * width, b.y * height);
-            context.strokeStyle = `rgba(172,139,255,${.06 * (1 - distance / 150)})`; context.stroke();
-          }
-        }
-      }
-    }
-    function tick(time) {
-      if (!active || paused || preference.matches) return;
-      if (time - previous >= 40) { draw(Math.min(time - previous, 80)); previous = time; }
-      frame = requestAnimationFrame(tick);
-    }
-    function update() {
-      cancelAnimationFrame(frame); active = !document.hidden;
-      previous = performance.now(); draw(0);
-      if (active && !paused && !preference.matches) frame = requestAnimationFrame(tick);
-    }
-    resize(); update();
-    window.addEventListener('resize', resize);
-    document.addEventListener('visibilitychange', update);
-    preference.addEventListener('change', update);
-    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); document.removeEventListener('visibilitychange', update); preference.removeEventListener('change', update); };
-  }, [paused]);
-  return <canvas className="ambient-field" ref={canvas} aria-hidden="true" />;
-}
-
-export function SecurityOrb({ compact = false }) {
-  return <div className={`security-orb ${compact ? 'compact' : ''}`} aria-hidden="true">
-    <div className="orb-aura" />
-    <svg viewBox="0 0 400 330" className="orb-svg">
-      <defs><radialGradient id="orb-fill"><stop stopColor="#a78bfa" stopOpacity=".12" /><stop offset="1" stopColor="#a78bfa" stopOpacity="0" /></radialGradient><linearGradient id="shield-fill" x2="1" y2="1"><stop stopColor="#e2d8ff" /><stop offset="1" stopColor="#9870ed" /></linearGradient></defs>
-      <g className="orb-grid" fill="none" stroke="#a58bc9" strokeOpacity=".16" strokeWidth=".7">
-        <ellipse cx="200" cy="165" rx="121" ry="121" fill="url(#orb-fill)" />
-        {[28, 65, 100].map(r => <ellipse key={r} cx="200" cy="165" rx={r} ry="121" />)}
-        {[45, 83, 113].map(r => <ellipse key={r} cx="200" cy="165" rx="121" ry={r} />)}
-        <path d="M79 165h242M200 44v242" />
-      </g>
-      <g className="orb-orbit" fill="none" stroke="#b295ee" strokeWidth=".8"><ellipse cx="200" cy="165" rx="167" ry="60" transform="rotate(-28 200 165)" strokeOpacity=".45" /><ellipse cx="200" cy="165" rx="157" ry="50" transform="rotate(34 200 165)" strokeOpacity=".22" /></g>
-      <ellipse className="orb-tracer" cx="200" cy="165" rx="167" ry="60" transform="rotate(-28 200 165)" fill="none" stroke="#d2f79a" strokeWidth="2" strokeDasharray="8 720" strokeLinecap="round" />
-      <g className="orb-nodes"><circle cx="94" cy="209" r="4" fill="#d2f79a" /><circle cx="317" cy="112" r="3" fill="#c2a2ff" /><circle cx="240" cy="51" r="2" fill="#bca7e6" /><circle cx="125" cy="76" r="3" fill="#7ecdfa" /><circle cx="285" cy="252" r="3" fill="#a993ff" /></g>
-      <g className="orb-shield"><path d="m200 112 41 17v34c0 28-41 52-41 52s-41-24-41-52v-34l41-17Z" fill="#141225" stroke="url(#shield-fill)" strokeWidth="1.6" /><path d="m200 122 32 13v28c0 21-32 42-32 42s-32-21-32-42v-28l32-13Z" fill="#ac8bff" fillOpacity=".05" stroke="#ac8bff" strokeOpacity=".25" /><path d="m185 160 10 10 22-24" fill="none" stroke="#d2f79a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></g>
-      <g fontFamily="monospace" fontSize="7" fill="#9d8ab8" letterSpacing="1.2"><text x="49" y="272">ENCRYPT YOUR INSTINCTS.</text><text x="258" y="65">PHISHGUARD / ML</text></g>
-      <path d="M31 49h14m-7-7v14M351 283h14m-7-7v14" stroke="#5e4d79" strokeWidth="1" />
+// Code-native vector artwork remains sharp at every viewport size.
+export function SecurityPipeline({ compact = false }) {
+  return <div className={`security-pipeline ${compact ? 'compact' : ''}`} aria-hidden="true">
+    <svg viewBox="0 0 480 210" className="pipeline-svg">
+      <g fill="none" stroke="currentColor" strokeWidth="1" className="pipeline-grid">{[30,70,110,150,190].map(y => <path key={y} d={`M0 ${y}h480`}/>)}{[20,60,100,140,180,220,260,300,340,380,420,460].map(x => <path key={x} d={`M${x} 0v210`}/>)}</g>
+      <g fill="none" stroke="#5977a3" strokeWidth="1.5"><path d="M95 58h65q15 0 15 15v32h32M95 152h65q15 0 15-15v-32M273 105h39q15 0 15-15V58h53M327 105v32q0 15 15 15h38"/></g>
+      <g className="pipeline-flow" fill="none" stroke="#4d91ff" strokeWidth="2" strokeDasharray="7 115"><path d="M95 58h65q15 0 15 15v32h32M273 105h39q15 0 15-15V58h53M327 105v32q0 15 15 15h38"/></g>
+      <g className="pipeline-node"><rect x="24" y="35" width="84" height="46" rx="9"/><rect x="24" y="129" width="84" height="46" rx="9"/><rect x="374" y="35" width="88" height="46" rx="9"/><rect x="374" y="129" width="88" height="46" rx="9"/></g>
+      <rect x="203" y="68" width="74" height="74" rx="18" fill="#2563eb" stroke="#80aaff"/>
+      <path d="m240 84-18 7v14c0 13 18 23 18 23s18-10 18-23V91l-18-7Z" fill="none" stroke="white" strokeWidth="2"/><path d="m231 105 6 6 12-14" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      <g fontFamily="system-ui, sans-serif" fontSize="12" fontWeight="600" textAnchor="middle" className="pipeline-label"><text x="66" y="63">URL</text><text x="66" y="157">EMAIL</text><text x="418" y="63">EVIDENCE</text><text x="418" y="157">VERDICT</text></g>
+      <text x="240" y="166" textAnchor="middle" fontFamily="system-ui, sans-serif" fontSize="10" letterSpacing="1.5" fill="#9baecc">ML ENGINE</text>
     </svg>
   </div>;
 }
