@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>PhishGuard</title><link rel="stylesheet" href="popup.css"></head><body>
+<header><span>◇</span><div><h1>PhishGuard</h1><p>LOCAL LINK PROTECTION</p></div></header>
+<p class="intro">Clicked web links are sent to your local ML backend. Live external checks are never run by this extension.</p>
+<label class="toggle">Enable protection <input id="enabled" type="checkbox" checked></label>
+<p id="status" role="status">Checking pairing…</p>
+<section><label for="token">Pairing token from Protection</label><input id="token" type="password" placeholder="Paste your token" autocomplete="off"><button id="pair">Pair extension</button></section>
+<div class="actions"><button id="scan">Check current tab</button><button id="sync">Sync blocklist</button><button id="disconnect">Disconnect</button></div>
+<p id="result" role="status"></p><p class="note">Synced hosts are blocked on navigation. New ML checks cover ordinary link clicks, not typed URLs, forms, scripted redirects or every browser context.</p>
+<script src="popup.js" type="module"></script></body></html>

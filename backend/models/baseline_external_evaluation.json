@@ -1,0 +1,114 @@
+{
+  "kind": "url",
+  "source": "PhreshPhish v1.0.1 \u2014 publisher test slice (1000 rows)",
+  "source_verified": true,
+  "sha256": "35795b6c61301f84b6a4feb41307575adc98c60bc7087ee62b55aa679a3a283c",
+  "evaluated_at": "2026-10-07T05:24:25.497678+00:00",
+  "excluded": {
+    "overlapping_domain": 76,
+    "duplicate": 0,
+    "invalid": 0
+  },
+  "metrics": {
+    "accuracy": 0.4177,
+    "precision": 0.4175,
+    "recall": 0.8894,
+    "f1": 0.5682,
+    "roc_auc": 0.3175,
+    "false_positive_rate": 0.9392,
+    "confusion_matrix": [
+      [
+        32,
+        494
+      ],
+      [
+        44,
+        354
+      ]
+    ],
+    "test_samples": 924,
+    "class_counts": {
+      "legitimate": 526,
+      "phishing": 398
+    },
+    "brier_score": 0.5726,
+    "reliability": [
+      {
+        "predicted": 0.0233,
+        "observed": 0.5652
+      },
+      {
+        "predicted": 0.1713,
+        "observed": 0.5
+      },
+      {
+        "predicted": 0.3208,
+        "observed": 1.0
+      },
+      {
+        "predicted": 0.4029,
+        "observed": 0.0
+      },
+      {
+        "predicted": 0.7019,
+        "observed": 1.0
+      },
+      {
+        "predicted": 0.8269,
+        "observed": 1.0
+      },
+      {
+        "predicted": 0.9921,
+        "observed": 0.4091
+      }
+    ],
+    "thresholds": [
+      {
+        "threshold": 0.3,
+        "precision": 0.419,
+        "recall": 0.897,
+        "false_positive_rate": 0.9411,
+        "false_positives": 495,
+        "false_negatives": 41
+      },
+      {
+        "threshold": 0.5,
+        "precision": 0.4175,
+        "recall": 0.8894,
+        "false_positive_rate": 0.9392,
+        "false_positives": 494,
+        "false_negatives": 44
+      },
+      {
+        "threshold": 0.7,
+        "precision": 0.4161,
+        "recall": 0.8844,
+        "false_positive_rate": 0.9392,
+        "false_positives": 494,
+        "false_negatives": 46
+      },
+      {
+        "threshold": 0.9,
+        "precision": 0.4084,
+        "recall": 0.8568,
+        "false_positive_rate": 0.9392,
+        "false_positives": 494,
+        "false_negatives": 57
+      }
+    ]
+  },
+  "limitations": "Small publisher-order slice, not the full benchmark or a random representative sample. Publisher labels are not independently audited. Domains present anywhere in the original model corpus are excluded. No threshold tuning or fitting on these rows. This checks the URL model only, not the combined policy, live services or email classifier.",
+  "source_url": "https://huggingface.co/datasets/phreshphish/phreshphish",
+  "revision": "eabec4b7a66324b79cc8a0ad856d1731dc26fe1a",
+  "downloaded_at": "2026-10-07T05:24:25.108024+00:00",
+  "collection_date_range": [
+    "2025-09-08",
+    "2025-12-16"
+  ],
+  "sampling": "First 1000 publisher-order test rows; no selection based on model results; original phish/benign labels.",
+  "model_sha256": {
+    "url": "9abb5f0a53928e54a0a1d1336a3e52ba921d64e0be407c585e10abf747beb8b2",
+    "email": "7a9a2ab02289bf724ee4e6ff933eebd38576f629709021d63e94fefe526b8518"
+  },
+  "role": "Historical diagnostic only; findings informed model development. Not an untouched final test."
+}

@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "PhishGuard — Link Protection",
+  "version": "2.0.0",
+  "description": "Check clicked links using your local PhishGuard ML backend and block your synced hosts.",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage", "activeTab", "alarms", "declarativeNetRequest"],
+  "host_permissions": ["http://127.0.0.1:8000/*"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "action": { "default_popup": "popup.html", "default_title": "PhishGuard" },
+  "content_scripts": [{ "matches": ["http://*/*", "https://*/*"], "js": ["content.js"], "run_at": "document_start" }]
+}

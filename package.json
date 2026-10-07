@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
+    "dev:ui": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:backend": "node scripts/test-backend.mjs"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
     "chart.js": "^4.5.1",
     "jspdf": "^4.1.0",
     "jspdf-autotable": "^5.0.7",

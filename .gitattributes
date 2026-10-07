@@ -1,0 +1,3 @@
+# Keep the feature extractor's model fingerprint stable on Windows checkouts.
+backend/features.py text eol=lf
+*.joblib binary

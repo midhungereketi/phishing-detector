@@ -20,11 +20,8 @@ class ErrorBoundary extends React.Component {
                 <div style={{ padding: '20px', color: 'red', background: '#111' }}>
                     <h1>Something went wrong.</h1>
                     <pre>{this.state.error && this.state.error.toString()}</pre>
-                    <button onClick={() => {
-                        localStorage.clear();
-                        window.location.reload();
-                    }} style={{ padding: '10px', marginTop: '20px' }}>
-                        Clear Data & Reload
+                    <button onClick={() => window.location.reload()} style={{ padding: '10px', marginTop: '20px' }}>
+                        Reload application
                     </button>
                 </div>
             );
