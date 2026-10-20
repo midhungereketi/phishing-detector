@@ -13,7 +13,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
@@ -23,6 +23,7 @@ from .detector import Detector, finalize
 from .features import normalize_url
 from .storage import Store, password_matches
 from .intelligence import Intelligence, evidence_score
+from .otp import hash_code, new_code, send_code
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,6 +34,30 @@ class Credentials(BaseModel):
     model_config = ConfigDict(extra="forbid")
     username: str = Field(min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_.-]+$")
     password: str = Field(min_length=8, max_length=128)
+
+
+class Registration(Credentials):
+    email: str = Field(min_length=5, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value):
+        value = value.strip().lower()
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value):
+            raise ValueError("Enter a valid email address.")
+        return value
+
+
+class RegistrationCode(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    username: str = Field(min_length=3, max_length=40, pattern=r"^[a-zA-Z0-9_.-]+$")
+    email: str = Field(min_length=5, max_length=254)
+    code: str = Field(pattern=r"^[0-9]{6}$")
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value):
+        return Registration.normalize_email(value)
 
 
 class URLInput(BaseModel):
@@ -60,7 +85,7 @@ class HostInput(BaseModel):
     host: str = Field(min_length=1, max_length=253)
 
 
-def create_app(database=None, intelligence_path=None):
+def create_app(database=None, intelligence_path=None, mailer=None):
     database_url = os.getenv("DATABASE_URL") if database is None else None
     if os.getenv("VERCEL") and database is None and not database_url:
         raise RuntimeError("Connect a persistent Postgres database and set DATABASE_URL before deploying.")
@@ -156,14 +181,37 @@ def create_app(database=None, intelligence_path=None):
     def health(request: Request):
         return {"status": "online", "models_ready": request.app.state.detector.ready}
 
-    @app.post("/api/auth/register", status_code=201)
-    def register(data: Credentials, request: Request, response: Response):
-        rate_limit(request, "auth", 20)
+    @app.post("/api/auth/register", status_code=202)
+    def register(data: Registration, request: Request):
+        rate_limit(request, "registration", 5)
+        username = data.username.lower()
+        code = new_code()
+        code_hash = hash_code(code)
+        try:
+            state = store.prepare_registration(username, data.email, data.password, code_hash, time.time())
+        except sqlite3.IntegrityError:
+            state = "taken"
+        if state == "taken":
+            raise HTTPException(409, "That username or email is already in use.")
+        if state == "cooldown":
+            raise HTTPException(429, "Wait one minute before requesting another code.")
+        try:
+            (mailer or send_code)(data.email, code)
+        except Exception:
+            store.cancel_registration(username, code_hash)
+            raise HTTPException(503, "Could not send the verification email. Try again later.") from None
+        return {"message": "Verification code sent. Check your email.", "expires_in_seconds": 600}
+
+    @app.post("/api/auth/register/verify", status_code=201)
+    def verify_registration(data: RegistrationCode, request: Request, response: Response):
+        rate_limit(request, "verification", 10)
         username = data.username.lower()
         try:
-            user_id = store.create_user(username, data.password)
+            state, user_id = store.complete_registration(username, data.email, data.code, time.time())
         except sqlite3.IntegrityError:
-            raise HTTPException(409, "That username is already registered.") from None
+            raise HTTPException(409, "That username or email is already in use.") from None
+        if state != "created":
+            raise HTTPException(400, "Code invalid or expired. Request a new code if needed.")
         session(response, user_id)
         store.log(username, "Account registered")
         return {"id": user_id, "username": username, "role": "user"}

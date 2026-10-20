@@ -24,9 +24,17 @@ def service(tmp_path):
 
 @pytest.fixture
 def client(tmp_path):
-    with TestClient(create_app(tmp_path / 'users.sqlite3', tmp_path / 'intel.sqlite3'), headers={'X-PhishGuard': '1'}) as client:
-        client.post('/api/auth/register', json={'username': 'upgrader', 'password': 'UpgradeTest!123'})
+    codes = {}
+    with TestClient(create_app(tmp_path / 'users.sqlite3', tmp_path / 'intel.sqlite3', mailer=lambda email, code: codes.__setitem__(email, code)), headers={'X-PhishGuard': '1'}) as client:
+        client.codes = codes
+        register(client, 'upgrader')
         yield client
+
+
+def register(client, username):
+    email = f'{username}@example.test'
+    assert client.post('/api/auth/register', json={'username': username, 'email': email, 'password': 'UpgradeTest!123'}).status_code == 202
+    assert client.post('/api/auth/register/verify', json={'username': username, 'email': email, 'code': client.codes[email]}).status_code == 201
 
 
 @pytest.mark.parametrize('host', ['127.0.0.1', '10.0.0.1', '169.254.169.254', '192.168.1.1', '192.0.2.1', '::1', '::ffff:127.0.0.1', 'fc00::1'])
@@ -212,5 +220,5 @@ def test_evaluation_reports_are_user_scoped_and_do_not_change_models(client):
     assert response.status_code == 200
     assert client.get('/api/evaluation').json()[0]['source'] == 'Synthetic test only'
     client.post('/api/auth/logout')
-    client.post('/api/auth/register', json={'username': 'otheruser', 'password': 'UpgradeTest!123'})
+    register(client, 'otheruser')
     assert client.get('/api/evaluation').json() == []

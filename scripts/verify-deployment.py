@@ -1,12 +1,12 @@
 """Exercise the public deployment with disposable data and no database secrets.
 
-Usage: python scripts/verify-deployment.py https://your-production-domain
-Only generated test credentials and reserved example email/host data are sent.
-The test leaves one random-password test account, clears its history/blocklist,
-and revokes its sessions. It never modifies another user's data.
+Usage: Set PHISHGUARD_TEST_USERNAME and PHISHGUARD_TEST_PASSWORD for a dedicated,
+already email-verified test account, then run this script with the HTTPS origin.
+Only reserved example email/host data are sent. The test clears its own history
+and blocklist and revokes its sessions. Never use a real user's account.
 """
 import json
-import secrets
+import os
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -16,8 +16,10 @@ import httpx
 origin = sys.argv[1].rstrip("/")
 if urlsplit(origin).scheme != "https":
     raise SystemExit("Use the canonical HTTPS deployment origin.")
-username = "deploy_test_" + secrets.token_hex(5)
-password = secrets.token_urlsafe(24)
+username = os.getenv("PHISHGUARD_TEST_USERNAME", "")
+password = os.getenv("PHISHGUARD_TEST_PASSWORD", "")
+if not username or not password:
+    raise SystemExit("Set PHISHGUARD_TEST_USERNAME and PHISHGUARD_TEST_PASSWORD for a dedicated verified test account.")
 credentials = {"username": username, "password": password}
 passed = []
 headers = {"X-PhishGuard": "1"}
@@ -31,12 +33,11 @@ def check(response, code=200):
 with httpx.Client(base_url=origin, headers=headers, timeout=90) as client:
     assert check(client.get("/api/health"))["models_ready"]
     passed.append("Hosted API and trained models ready")
-    registered = client.post("/api/auth/register", json=credentials)
-    check(registered, 201)
-    assert "Secure" in registered.headers["set-cookie"]
-    passed.append("Registration and secure server session")
+    login = client.post("/api/auth/login", json=credentials)
+    check(login)
+    assert "Secure" in login.headers["set-cookie"]
+    passed.append("Verified-account login and secure server session")
     try:
-        check(client.post("/api/auth/register", json=credentials), 409)
         report = check(client.post("/api/scan/url", json={"url": "https://www.wikipedia.org/"}))
         assert report["risk_level"] == "Low"
         report_id = report["id"]

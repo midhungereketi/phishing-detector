@@ -77,7 +77,7 @@ Calibration changed test Brier from 0.05941 to 0.06188 for URLs (slightly worse)
 
 ## Detection and prevention workflow
 
-1. The user registers or signs in. Passwords are hashed server-side; a random HttpOnly cookie identifies an expiring session.
+1. A new user supplies a username, email and password. The backend emails a six-digit code and creates the account only after verification. Existing accounts can sign in with username and password. Passwords are hashed server-side; a random HttpOnly cookie identifies an expiring session.
 2. The user pastes a URL or email source, or imports an `.eml` file.
 3. The server validates inputs, extracts features and applies the trained models.
 4. A report shows risk, measured signals, metadata and actions. Medium/high risk can generate an immediate in-app alert.

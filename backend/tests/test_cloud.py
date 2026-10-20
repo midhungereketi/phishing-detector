@@ -31,11 +31,14 @@ def test_deployed_host_cookie_and_extension(tmp_path, monkeypatch):
     monkeypatch.setenv("VERCEL_URL", "preview.example.test")
     monkeypatch.setenv("PHISHGUARD_ALLOWED_HOSTS", "phishguard.example.test")
     monkeypatch.setenv("PHISHGUARD_PUBLIC_ORIGIN", "https://phishguard.example.test")
-    app = create_app(tmp_path / "users.sqlite3", tmp_path / "intelligence.sqlite3")
+    codes = {}
+    app = create_app(tmp_path / "users.sqlite3", tmp_path / "intelligence.sqlite3", mailer=lambda email, code: codes.__setitem__(email, code))
     with TestClient(app, base_url="https://phishguard.example.test", headers={"X-PhishGuard": "1"}) as client:
         assert client.get("/api/health").status_code == 200
         assert client.get("/api/health", headers={"host": "attacker.example.test"}).status_code == 400
-        response = client.post("/api/auth/register", json={"username": "cloudtester", "password": "DisposableCloud!123"})
+        email = "cloudtester@example.test"
+        assert client.post("/api/auth/register", json={"username": "cloudtester", "email": email, "password": "DisposableCloud!123"}).status_code == 202
+        response = client.post("/api/auth/register/verify", json={"username": "cloudtester", "email": email, "code": codes[email]})
         assert response.status_code == 201
         assert "Secure" in response.headers["set-cookie"]
         assert client.get("/api/auth/me").status_code == 200

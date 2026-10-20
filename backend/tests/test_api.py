@@ -10,12 +10,17 @@ HEADERS = {"X-PhishGuard": "1"}
 
 @pytest.fixture
 def client(tmp_path):
-    with TestClient(create_app(tmp_path / "test.sqlite3"), headers=HEADERS) as client:
+    codes = {}
+    with TestClient(create_app(tmp_path / "test.sqlite3", mailer=lambda email, code: codes.__setitem__(email, code)), headers=HEADERS) as client:
+        client.codes = codes
         yield client
 
 
 def register(client, username="student"):
-    response = client.post("/api/auth/register", json={"username": username, "password": "TestPassword!123"})
+    email = f"{username}@example.test"
+    started = client.post("/api/auth/register", json={"username": username, "email": email, "password": "TestPassword!123"})
+    assert started.status_code == 202
+    response = client.post("/api/auth/register/verify", json={"username": username, "email": email, "code": client.codes[email]})
     assert response.status_code == 201
     return response
 

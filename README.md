@@ -11,6 +11,7 @@ A local Computer Networks project built with React, Vite, FastAPI, scikit-learn 
 - Immediate in-app risk alerts, account-specific scan history and PDF/JSON security reports.
 - Personal blocklist, optional automatic high risk host blocking and server-checked link-opening controls.
 - Persistent protection preferences, secure password hashing, expiring HttpOnly sessions and server-authorized admin activity logs.
+- Email OTP verification for new accounts: six-digit codes expire after 10 minutes, with resend cooldown and attempt limits. Existing username/password accounts still sign in.
 - Model Lab with actual metrics, confusion matrices, URL algorithm comparison, feature importance and dataset checksums.
 - Responsive navy-and-white security console with solid panels, crisp vector pipeline artwork, scan feedback, risk charts and educational explanations. A single stylesheet defines the interface; no blur filters or translucent content panels are used. Ctrl+K opens page navigation; the top-bar motion control pauses animations, and device reduced-motion preferences are respected.
 - Cached verified-online PhishTank URL matching; explicit fresh/stale/missing status and transparent risk-policy floors.
@@ -31,10 +32,16 @@ Cloud runtime requires a dedicated Postgres database (Neon pooled connection sup
 - `PHISHGUARD_ALLOWED_HOSTS`: exact production hostname(s), separated by commas.
 - `PHISHGUARD_PUBLIC_ORIGIN`: canonical HTTPS origin used by downloaded browser extensions.
 - `PHISHGUARD_SECURE_COOKIE=1`: secure cookies (also enforced automatically on Vercel).
+- `RESEND_API_KEY`: server-only Resend email API key (preferred if you own a verified sending domain).
+- `PHISHGUARD_EMAIL_FROM`: verified sender address, for example `PhishGuard <verify@your-domain.example>`.
+
+Alternatively configure `PHISHGUARD_SMTP_HOST`, `PHISHGUARD_SMTP_PORT` (465 or 587), `PHISHGUARD_SMTP_USERNAME` and `PHISHGUARD_SMTP_PASSWORD` with a TLS-capable mail account. This allows a dedicated Gmail address and Google App Password when you do not own a domain. Keep credentials in server-only environment variables. If both providers are configured, Resend is used.
 
 Run `python scripts/migrate-cloud.py` with the cloud connection URL available before releasing the first deployment. The script can read an ignored `.env.cloud` file. It only creates missing application tables and indexes; it does not upload local accounts, passwords or reports. Alternatively, set `PHISHGUARD_AUTO_MIGRATE=1` for the first release to create the tables inside Vercel without exporting credentials. Initialization uses a transaction advisory lock and only creates missing objects. Disable this flag after confirming that the first cloud release works.
 
 Cloud accounts, sessions, reports, blocklists, evaluations and the phishing feed live in Postgres. Auth/scan rate limits are shared across function instances. The feed starts empty until a successful provider refresh/import; its status is shown honestly in Protection. VirusTotal remains optional and requires a server API key. Train models locally and commit trusted artifacts; do not train during deployment.
+
+New registration has two API steps: `/api/auth/register` stores a pending account and emails a code; `/api/auth/register/verify` creates the user and session only after the correct code. Codes are hashed, expire after 10 minutes, allow five guesses, and have a 60-second resend cooldown. Email delivery fails closed. Resend requires an owned, verified sending domain to reach arbitrary recipients; a `vercel.app` subdomain cannot be used as your sender. SMTP can use a dedicated mailbox instead. Existing accounts without an email address keep their username/password login. The Postgres schema addition is made by running the migration or one release with `PHISHGUARD_AUTO_MIGRATE=1` before turning on the new UI.
 
 Downloads from the hosted Protection page configure the extension for the canonical cloud origin. Existing local extension installations keep their local backend until replaced with the hosted ZIP and paired again. Provider refresh budgets and VirusTotal's short cache are otherwise per process; public high-volume deployments should add provider-wide quotas.
 
@@ -46,7 +53,7 @@ The project-local environment, Node dependencies and trained models have already
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173** and create an account. This starts the Python API on port 8000 and Vite on 5173. Keep the terminal running; Ctrl+C stops the launcher and its children. Ports must be free. If a separate frontend is already running, stop it in its own terminal first.
+Open **http://127.0.0.1:5173** and create an account. Configure Resend or SMTP and `PHISHGUARD_EMAIL_FROM` first to receive signup codes. This starts the Python API on port 8000 and Vite on 5173. Keep the terminal running; Ctrl+C stops the launcher and its children. Ports must be free. If a separate frontend is already running, stop it in its own terminal first.
 
 ## Fresh installation
 
