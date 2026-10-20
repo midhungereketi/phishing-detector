@@ -61,17 +61,36 @@ class HostInput(BaseModel):
 
 
 def create_app(database=None, intelligence_path=None):
-    store = Store(database or ROOT / "backend" / "phishguard.sqlite3")
+    database_url = os.getenv("DATABASE_URL") if database is None else None
+    if os.getenv("VERCEL") and database is None and not database_url:
+        raise RuntimeError("Connect a persistent Postgres database and set DATABASE_URL before deploying.")
+    if database_url:
+        from .postgres import PostgresStore
+        store = PostgresStore(database_url)
+    else:
+        store = Store(database or ROOT / "backend" / "phishguard.sqlite3")
 
     @asynccontextmanager
     async def lifespan(app):
-        store.initialize()
+        # First-release setup can run inside the cloud, keeping its credentials
+        # in Vercel. Postgres initialization is idempotent and serialized.
+        if not (os.getenv("VERCEL") and database_url) or os.getenv("PHISHGUARD_AUTO_MIGRATE") == "1":
+            store.initialize()
         app.state.detector = Detector()
-        app.state.intelligence = Intelligence(intelligence_path)
+        if database_url and intelligence_path is None:
+            from .postgres import PostgresIntelligence
+            app.state.intelligence = PostgresIntelligence(database_url)
+        else:
+            app.state.intelligence = Intelligence(intelligence_path)
         yield
 
     app = FastAPI(title="Phishing Attack Detection and Prevention Using Machine Learning", version="2.0.0", lifespan=lifespan)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+    allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
+    allowed_hosts.extend(host.strip() for host in os.getenv("PHISHGUARD_ALLOWED_HOSTS", "").split(",") if host.strip())
+    for key in ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_BRANCH_URL"):
+        if os.getenv(key):
+            allowed_hosts.append(os.environ[key])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
     extension_origins = [origin.strip() for origin in os.getenv("PHISHGUARD_EXTENSION_ORIGINS", "").split(",") if re.fullmatch(r"chrome-extension://[a-p]{32}", origin.strip())]
     if extension_origins:
         app.add_middleware(CORSMiddleware, allow_origins=extension_origins, allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type", "X-PhishGuard"])
@@ -90,6 +109,13 @@ def create_app(database=None, intelligence_path=None):
         return response
 
     def rate_limit(request, category, limit):
+        if database_url:
+            # Persist rate limits across independent serverless instances. Store a
+            # client hash rather than a raw IP address in the cloud database.
+            client = hashlib.sha256((request.client.host if request.client else "unknown").encode()).hexdigest()
+            if not store.allow_attempt(f"{category}:{client}", time.time(), limit):
+                raise HTTPException(429, "Too many requests. Wait one minute and try again.")
+            return
         key = (category, request.client.host)
         bucket = attempts[key]
         current = time.time()
@@ -124,7 +150,7 @@ def create_app(database=None, intelligence_path=None):
         with store.connection() as db:
             db.execute("DELETE FROM sessions WHERE expires<=?", (time.time(),))
             db.execute("INSERT INTO sessions(token,user_id,expires) VALUES (?,?,?)", (hashlib.sha256(token.encode()).hexdigest(), user_id, time.time() + 86400))
-        response.set_cookie("phishguard_session", token, max_age=86400, httponly=True, samesite="strict", secure=os.environ.get("PHISHGUARD_SECURE_COOKIE") == "1")
+        response.set_cookie("phishguard_session", token, max_age=86400, httponly=True, samesite="strict", secure=bool(os.getenv("VERCEL")) or os.environ.get("PHISHGUARD_SECURE_COOKIE") == "1")
 
     @app.get("/api/health")
     def health(request: Request):
@@ -315,7 +341,19 @@ def create_app(database=None, intelligence_path=None):
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
             for path in (ROOT / "extension").iterdir():
                 if path.is_file() and path.suffix in (".js", ".json", ".html", ".css", ".md"):
-                    archive.write(path, "phishguard-extension/" + path.name)
+                    if os.getenv("PHISHGUARD_PUBLIC_ORIGIN") and path.name in ("manifest.json", "background.js"):
+                        origin = os.environ["PHISHGUARD_PUBLIC_ORIGIN"].rstrip("/")
+                        content = path.read_text(encoding="utf-8")
+                        if path.name == "manifest.json":
+                            manifest = json.loads(content)
+                            manifest["host_permissions"] = [origin + "/*"]
+                            manifest["description"] = "Check clicked links using PhishGuard ML and block your synced hosts."
+                            content = json.dumps(manifest, indent=2)
+                        else:
+                            content = content.replace("http://127.0.0.1:8000/api", origin + "/api")
+                        archive.writestr("phishguard-extension/" + path.name, content)
+                    else:
+                        archive.write(path, "phishguard-extension/" + path.name)
         output.seek(0)
         return StreamingResponse(output, media_type="application/zip", headers={"Content-Disposition": "attachment; filename=phishguard-extension.zip"})
 

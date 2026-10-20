@@ -14,3 +14,4 @@ backend/*.sqlite3*
 .idea/
 .DS_Store
 artifacts/
+.vercel/

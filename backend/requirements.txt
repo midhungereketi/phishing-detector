@@ -8,3 +8,6 @@ pytest>=8,<10
 dnspython>=2.6,<3
 python-dotenv>=1,<2
 duckdb>=1.4,<2
+
+# Optional in local SQLite mode; required for cloud Postgres.
+psycopg[binary]>=3.2,<4

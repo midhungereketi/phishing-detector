@@ -21,6 +21,23 @@ A local Computer Networks project built with React, Vite, FastAPI, scikit-learn 
 
 **Scope:** Local ML and feed matching do not contact targets. Live checks contact targets/providers only when explicitly enabled. The extension adds click checks and synced host blocks; it does not intercept every navigation or filter an inbox. Pasted SPF/DKIM/DMARC results remain unverified. Dataset calibration does not establish real-world confidence; combined policy scores are not probabilities. See [DATASETS.md](DATASETS.md) and [extension/README.md](extension/README.md).
 
+## Vercel deployment
+
+The repository includes a same-origin Vercel deployment: Vite serves the UI and `api/index.py` exports the FastAPI application. Python 3.12 and the model's exact scikit-learn version are pinned. Training corpora, local SQLite files, `.env` files and test artifacts are excluded from deployment.
+
+Cloud runtime requires a dedicated Postgres database (Neon pooled connection supported). Local development keeps SQLite when `DATABASE_URL` is unset. Connect the database to this Vercel project and configure these server-only variables:
+
+- `DATABASE_URL`: pooled Postgres URL supplied by the database integration.
+- `PHISHGUARD_ALLOWED_HOSTS`: exact production hostname(s), separated by commas.
+- `PHISHGUARD_PUBLIC_ORIGIN`: canonical HTTPS origin used by downloaded browser extensions.
+- `PHISHGUARD_SECURE_COOKIE=1`: secure cookies (also enforced automatically on Vercel).
+
+Run `python scripts/migrate-cloud.py` with the cloud connection URL available before releasing the first deployment. The script can read an ignored `.env.cloud` file. It only creates missing application tables and indexes; it does not upload local accounts, passwords or reports. Alternatively, set `PHISHGUARD_AUTO_MIGRATE=1` for the first release to create the tables inside Vercel without exporting credentials. Initialization uses a transaction advisory lock and only creates missing objects. Disable this flag after confirming that the first cloud release works.
+
+Cloud accounts, sessions, reports, blocklists, evaluations and the phishing feed live in Postgres. Auth/scan rate limits are shared across function instances. The feed starts empty until a successful provider refresh/import; its status is shown honestly in Protection. VirusTotal remains optional and requires a server API key. Train models locally and commit trusted artifacts; do not train during deployment.
+
+Downloads from the hosted Protection page configure the extension for the canonical cloud origin. Existing local extension installations keep their local backend until replaced with the hosted ZIP and paired again. Provider refresh budgets and VirusTotal's short cache are otherwise per process; public high-volume deployments should add provider-wide quotas.
+
 ## Run on this computer
 
 The project-local environment, Node dependencies and trained models have already been prepared. From `phishing-detector`:
