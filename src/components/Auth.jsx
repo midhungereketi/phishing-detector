@@ -25,7 +25,7 @@ export default function Auth({ onLogin }) {
       <p>Inspect suspicious URLs and emails. Understand the warning signs. Keep sensitive information out of the wrong hands.</p>
       <div className="intro-features"><span>01 / URL intelligence</span><span>02 / Email analysis</span><span>03 / Security reports</span></div>
       <SecurityPipeline compact />
-      <div className="scope-note">Local inference by default. External checks only when you enable them.</div>
+      <div className="scope-note">Server-side analysis by default. Target lookups only when you enable them.</div>
     </section>
     <section className="auth-card">
       <div className="auth-card-symbol"><Icon name="shield" size={27} /></div><div className="eyebrow">YOUR SECURITY WORKSPACE</div>

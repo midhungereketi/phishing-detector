@@ -23,7 +23,7 @@ A local Computer Networks project built with React, Vite, FastAPI, scikit-learn 
 
 ## Vercel deployment
 
-The repository includes a same-origin Vercel deployment: Vite serves the UI and `api/index.py` exports the FastAPI application. Python 3.12 and the model's exact scikit-learn version are pinned. Training corpora, local SQLite files, `.env` files and test artifacts are excluded from deployment.
+The repository includes a same-origin Vercel deployment: Vite serves the UI and `api/index.py` exports the FastAPI application. Python 3.12 and the model's exact scikit-learn version are pinned. Training corpora, local SQLite files, `.env` files and test artifacts are excluded from deployment. This existing Vercel project uses Fluid Compute with `VERCEL_SUPPORT_LARGE_FUNCTIONS=1` to package the numerical ML dependencies; the account remains on Hobby.
 
 Cloud runtime requires a dedicated Postgres database (Neon pooled connection supported). Local development keeps SQLite when `DATABASE_URL` is unset. Connect the database to this Vercel project and configure these server-only variables:
 
