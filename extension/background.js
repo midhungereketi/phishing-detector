@@ -3,8 +3,15 @@ let syncQueue = Promise.resolve();
 
 async function configureStorage() {
   await chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' });
+  await chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
+  await publishStatus();
 }
 configureStorage().catch(() => {});
+
+async function publishStatus() {
+  const { enabled = true, token } = await chrome.storage.local.get(['enabled', 'token']);
+  await chrome.storage.session.set({ protecting: Boolean(enabled && token) });
+}
 
 async function call(path, body) {
   const { token } = await chrome.storage.local.get('token');
@@ -15,7 +22,11 @@ async function call(path, body) {
     ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(8000),
   });
   const result = await response.json();
-  if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : 'The local API rejected this check.');
+  if (!response.ok) {
+    const error = new Error(typeof result.detail === 'string' ? result.detail : 'The PhishGuard API rejected this check.');
+    error.status = response.status;
+    throw error;
+  }
   return result;
 }
 
@@ -39,6 +50,11 @@ async function syncRules() {
 
 function queueSync() {
   syncQueue = syncQueue.catch(() => {}).then(syncRules).catch(async error => {
+    if (error.status === 401) {
+      await chrome.storage.local.remove(['token', 'username', 'hosts', 'lastSync']);
+      await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: (await chrome.declarativeNetRequest.getDynamicRules()).map(rule => rule.id) });
+      await publishStatus();
+    }
     await chrome.storage.local.set({ syncError: error.message });
     throw error;
   });
@@ -74,17 +90,20 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       if (typeof message.token !== 'string' || message.token.length < 20 || message.token.length > 200) throw new Error('Enter a valid pairing token.');
       await configureStorage();
       await chrome.storage.local.set({ token: message.token.trim(), enabled: true });
+      await publishStatus();
       await queueSync();
       return { ok: true };
     }
     if (message.action === 'toggle') {
       await chrome.storage.local.set({ enabled: Boolean(message.enabled) });
+      await publishStatus();
       await queueSync();
       return { ok: true };
     }
     if (message.action === 'sync') { await queueSync(); return { ok: true }; }
     if (message.action === 'disconnect') {
       await chrome.storage.local.remove(['token', 'username', 'hosts', 'lastSync']);
+      await publishStatus();
       await queueSync();
       return { ok: true };
     }

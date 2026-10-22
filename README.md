@@ -136,7 +136,7 @@ In the URL scanner, select **Live DNS, TLS, redirects & domain age** to enable a
 
 ## Browser extension
 
-Open **Protection**, download/unzip the extension, load it unpacked in Chrome or Edge Developer mode, and generate a pairing token. Paste it into the extension popup and sync your blocklist. Instructions: [extension/README.md](extension/README.md). Tokens expire in 30 days and can be revoked from the app. If needed, configure the exact `chrome-extension://ID` origin in `.env`; wildcard CORS is not enabled. The extension uses the API at `127.0.0.1:8000`.
+Open **Protection**, download/unzip the extension, load it unpacked in Chrome or Edge Developer mode, and generate a pairing token. Paste it into the extension popup and sync your blocklist. Instructions: [extension/README.md](extension/README.md). Tokens expire in 30 days and can be revoked from the app. The downloaded ZIP uses the hosted app API; the repository's `extension/` source uses the local API at `127.0.0.1:8000`. Run `python scripts/package-extension.py` to build a standalone hosted-demo ZIP. If needed for a custom server, configure the exact `chrome-extension://ID` origin in `.env`; wildcard CORS is not enabled.
 
 Synced exact-host blocks cover browser navigation even offline. ML warnings cover ordinary clicked links, with an explicit override for unblocked targets. Address-bar URLs, forms and scripted navigation are not universally intercepted; the extension is not a firewall. A recent saved risky redirect cannot be bypassed by an offline original-URL check; perform a successful live rescan to replace the observation. Cached reputation is included in access checks.
 

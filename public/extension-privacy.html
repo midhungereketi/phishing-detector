@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PhishGuard Extension Privacy</title>
+  <style>
+    body{max-width:760px;margin:0 auto;padding:48px 24px;background:#091322;color:#e8f0fc;font:16px/1.65 system-ui,sans-serif}
+    h1,h2{line-height:1.2;color:#fff}h1{font-size:2rem}h2{margin-top:2rem;font-size:1.2rem}
+    a{color:#76d6ef}p,li{color:#d1dded}small{color:#a6b8cd}
+  </style>
+</head>
+<body>
+  <main>
+    <p><a href="/">← PhishGuard</a></p>
+    <h1>PhishGuard browser extension privacy</h1>
+    <small>Updated 23 October 2026</small>
+    <h2>What the extension checks</h2>
+    <p>When protection is enabled and you click a web link, the extension sends that link’s full URL, including its path and query, to the configured PhishGuard API for a machine-learning risk check. The popup checks the active tab’s URL only when you choose “Check current tab.” The extension does not read email messages, passwords, form contents, or your browsing history.</p>
+    <h2>Pairing and blocked hosts</h2>
+    <p>Pairing uses a token generated in your PhishGuard account. The token is stored in the browser’s restricted extension storage and sent to the API to authorize URL checks and download your personal blocked-host list. Synced blocked hosts are stored as local browser rules so they can be blocked even when the API is unavailable. Tokens expire after 30 days and can be revoked from the app. Disconnecting removes the local token and block rules.</p>
+    <h2>Storage and sharing</h2>
+    <p>The extension does not save a per-click browsing history in the PhishGuard application database, sell data, or send clicked URLs to the destination websites. The configured backend processes URLs and uses hosting infrastructure to deliver the service. Account and blocked-host data are stored by the app’s database provider. Hosting providers may retain operational logs under their own policies. The extension does not run optional live target-site checks or VirusTotal lookups.</p>
+    <h2>Control</h2>
+    <p>You can pause protection or disconnect in the popup, revoke pairing tokens in PhishGuard, and remove the extension in your browser. Pausing or disconnecting removes the extension’s active blocking rules. For project questions, visit the <a href="https://github.com/midhungereketi/phishing-detector">PhishGuard repository</a>.</p>
+  </main>
+</body>
+</html>

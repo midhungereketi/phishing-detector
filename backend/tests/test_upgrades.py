@@ -178,7 +178,8 @@ def test_scoped_extension_tokens_revocation_and_no_account_privileges(client):
     assert client.get('/api/extension/blocklist', headers=headers).status_code == 401
 
 
-def test_extension_zip_contains_runnable_sources_and_no_secrets(client):
+def test_extension_zip_contains_runnable_sources_and_no_secrets(client, monkeypatch):
+    monkeypatch.setenv('PHISHGUARD_PUBLIC_ORIGIN', 'https://phishing-detector-pink.vercel.app')
     response = client.get('/api/extension/download')
     assert response.status_code == 200
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
@@ -187,6 +188,10 @@ def test_extension_zip_contains_runnable_sources_and_no_secrets(client):
         assert not any('.env' in name or '.sqlite' in name for name in names)
         manifest = json.loads(archive.read('phishguard-extension/manifest.json'))
         assert manifest['manifest_version'] == 3
+        assert manifest['host_permissions'] == ['https://phishing-detector-pink.vercel.app/*']
+        worker = archive.read('phishguard-extension/background.js').decode()
+        assert "const API = 'https://phishing-detector-pink.vercel.app/api'" in worker
+        assert 'http://127.0.0.1:8000/api' not in worker
 
 
 def test_calibration_and_external_evaluation_exclude_corpus_domains():
