@@ -1,8 +1,13 @@
 (() => {
   // Inspect explicit clicks only. No background browsing-history collection.
-  let pending = false;
+  let latestCheck = 0;
+  let protecting = false;
+  chrome.storage.session.get('protecting').then(state => { protecting = state.protecting === true; }).catch(() => {});
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'session' && changes.protecting) protecting = changes.protecting.newValue === true;
+  });
   let host;
-  function warning(message, url, allowOverride = true) {
+  function warning(message, url, allowOverride = true, openOnce = () => window.location.assign(url)) {
     host?.remove();
     host = document.createElement('div');
     host.dataset.phishguardWarning = 'true';
@@ -18,7 +23,7 @@
     card.append(heading, detail, target, dismiss);
     if (allowOverride) {
       const override = document.createElement('button'); override.className = 'other'; override.textContent = 'Open once anyway';
-      override.onclick = () => { host.remove(); host = null; window.location.assign(url); };
+      override.onclick = () => { host.remove(); host = null; openOnce(); };
       card.append(override);
     }
     const note = document.createElement('p'); note.className = 'note'; note.textContent = 'ML estimates can be wrong. Synced blocked hosts remain blocked by the browser.'; card.append(note);
@@ -32,27 +37,29 @@
     };
     shade.append(card); root.append(style, shade); document.documentElement.append(host); dismiss.focus();
   }
-  function navigate(anchor, event, url) {
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.type === 'auxclick' || anchor.target === '_blank') window.open(url, '_blank', 'noopener,noreferrer');
+  function navigate(newTab, url) {
+    if (newTab) window.open(url, '_blank', 'noopener,noreferrer');
     else window.location.assign(url);
   }
   async function inspect(event) {
-    if (!event.isTrusted || event.defaultPrevented || (event.button !== 0 && event.button !== 1)) return;
+    if (!protecting || !event.isTrusted || event.defaultPrevented || (event.button !== 0 && event.button !== 1)) return;
     const anchor = event.composedPath().find(node => node instanceof HTMLAnchorElement);
     if (!anchor || anchor.hasAttribute('download')) return;
     let url;
     try { url = new URL(anchor.href); } catch { return; }
     if (!['http:', 'https:'].includes(url.protocol) || (url.origin === location.origin && url.pathname === location.pathname && url.search === location.search)) return;
     if (url.hostname === '127.0.0.1' && url.port === '8000') return;
+    const newTab = event.ctrlKey || event.metaKey || event.shiftKey || event.type === 'auxclick' || anchor.target === '_blank';
     event.preventDefault(); event.stopImmediatePropagation();
-    if (pending) return;
-    pending = true;
+    const check = ++latestCheck;
     try {
       const result = await chrome.runtime.sendMessage({ action: 'check', url: url.href });
-      if (result?.disabled || (result?.risk_level === 'Low' && !result.blocked_hosts?.length)) navigate(anchor, event, url.href);
-      else warning(result?.error || `${result?.risk_level || 'Unknown'} risk (${result?.score ?? '?'}/100). ${result?.action || 'The link could not be checked.'}`, url.href, !result?.blocked_hosts?.length);
-    } catch { warning('The local backend is unavailable. This link was not checked.', url.href); }
-    finally { pending = false; }
+      if (check !== latestCheck) return;
+      if (result?.disabled || (result?.risk_level === 'Low' && !result.blocked_hosts?.length)) navigate(newTab, url.href);
+      else warning(result?.error || `${result?.risk_level || 'Unknown'} risk (${result?.score ?? '?'}/100). ${result?.action || 'The link could not be checked.'}`, url.href, !result?.blocked_hosts?.length, () => navigate(newTab, url.href));
+    } catch {
+      if (check === latestCheck) warning('The PhishGuard API is unavailable. This link was not checked.', url.href, true, () => navigate(newTab, url.href));
+    }
   }
   document.addEventListener('click', inspect, true);
   document.addEventListener('auxclick', inspect, true);
